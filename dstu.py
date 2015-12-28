@@ -1,7 +1,7 @@
 import binascii
 import datetime
 
-#Version with 128-bit key and 128-bit block
+#DSTU 7624:2014 with 128-bit block and 128-bit key
 class dstu2014:
     def __init__(self, key):
         self.pi = [[168, 67, 95, 6, 107, 117, 108, 89, 113, 223, 135, 149, 23, 240, 216, 9,
