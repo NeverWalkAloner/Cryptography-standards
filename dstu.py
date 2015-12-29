@@ -316,19 +316,19 @@ class dstu2014:
 
 
 
+if __name__ == '__main__':
+    key = list(binascii.unhexlify('000102030405060708090a0b0c0d0e0f'))
+    pt = list(binascii.unhexlify('101112131415161718191a1b1c1d1e1f'))
+    dstu =dstu2014(key)
 
-key = list(binascii.unhexlify('000102030405060708090a0b0c0d0e0f'))
-pt = list(binascii.unhexlify('101112131415161718191a1b1c1d1e1f'))
-dstu =dstu2014(key)
+    key2 = list(binascii.unhexlify('0f0e0d0c0b0a09080706050403020100'))
+    ct = list(binascii.unhexlify('1f1e1d1c1b1a19181716151413121110'))
+    dstu2 = dstu2014(key2)
 
-key2 = list(binascii.unhexlify('0f0e0d0c0b0a09080706050403020100'))
-ct = list(binascii.unhexlify('1f1e1d1c1b1a19181716151413121110'))
-dstu2 = dstu2014(key2)
-
-print('DSTU 7624:2014')
-print(datetime.datetime.now())
-if binascii.hexlify(bytearray(dstu.encryption(pt))) == b'81bf1c7d779bac20e1c9ea39b4d2ad06':
-    print('Encryption works correctly!')
-if binascii.hexlify(bytearray(dstu2.decryption(ct))) == b'7291ef2b470cc7846f09c2303973dad7':
-    print('Decryption works correctly!')
-print(datetime.datetime.now())
+    print('DSTU 7624:2014')
+    print(datetime.datetime.now())
+    if binascii.hexlify(bytearray(dstu.encryption(pt))) == b'81bf1c7d779bac20e1c9ea39b4d2ad06':
+        print('Encryption works correctly!')
+    if binascii.hexlify(bytearray(dstu2.decryption(ct))) == b'7291ef2b470cc7846f09c2303973dad7':
+        print('Decryption works correctly!')
+    print(datetime.datetime.now())
