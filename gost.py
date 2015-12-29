@@ -30,7 +30,7 @@ class gost2015:
                       68, 64, 146, 58, 1, 38, 18, 26, 72, 104, 245, 129, 139, 199, 214, 32, 10, 8, 0, 76, 215, 116)
 
         #Precomputed table with multiplication results in field x^8 + x^7 + x^6 + x + 1
-        f = open('MultTable', 'rb')
+        f = open('gost_tables', 'rb')
         self.multtable = pickle.load(f)
         f.close()
         #Constants C using for key schedule
