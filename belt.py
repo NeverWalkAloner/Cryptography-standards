@@ -2,7 +2,7 @@ import binascii
 import datetime
 #STB 34.101.31-2011 with 128-bit block and 256-bit key
 class belt:
-    def __init__(self):
+    def __init__(self, key):
         self.H = [0xB1, 0x94, 0xBA, 0xC8, 0x0A, 0x08, 0xF5, 0x3B, 0x36, 0x6D, 0x00, 0x8E, 0x58, 0x4A, 0x5D, 0xE4,
                   0x85, 0x04, 0xFA, 0x9D, 0x1B, 0xB6, 0xC7, 0xAC, 0x25, 0x2E, 0x72, 0xC2, 0x02, 0xFD, 0xCE, 0x0D,
                   0x5B, 0xE3, 0xD6, 0x12, 0x17, 0xB9, 0x61, 0x81, 0xFE, 0x67, 0x86, 0xAD, 0x71, 0x6B, 0x89, 0x0B,
@@ -19,6 +19,8 @@ class belt:
                   0x7E, 0xCD, 0xA4, 0xD0, 0x15, 0x44, 0xAF, 0x8C, 0xA5, 0x84, 0x50, 0xBF, 0x66, 0xD2, 0xE8, 0x8A,
                   0xA2, 0xD7, 0x46, 0x52, 0x42, 0xA8, 0xDF, 0xB3, 0x69, 0x74, 0xC5, 0x51, 0xEB, 0x23, 0x29, 0x21,
                   0xD4, 0xEF, 0xD9, 0xB4, 0x3A, 0x62, 0x28, 0x75, 0x91, 0x14, 0x10, 0xEA, 0x77, 0x6C, 0xDA, 0x1D]
+        key = [self.list2int(key[i:i+4]) for i in range(0, len(key), 4)]
+        self.k = [key[i%8] for i in range(56)]
 
     #RotHi operation
     def circularleftshift(self, value, k):
@@ -63,20 +65,20 @@ class belt:
         return self.list2int(l)
 
     #Encrypt input m represented as list of bytes using key represented as list of bytes
-    def encryption(self, m, key):
-        key = [self.list2int(key[i:i+4]) for i in range(0, len(key), 4)]
+    def encryption(self, m):
+        #key = [self.list2int(key[i:i+4]) for i in range(0, len(key), 4)]
         a, b, c, d = [self.list2int(m[i:i+4]) for i in range(0, len(m), 4)]
-        k = [key[i%8] for i in range(56)]
+        #k = [key[i%8] for i in range(56)]
         for i in range(8):
-            b = b ^ self.gtransformation(self.modadd(a, k[7*i+0]), 5)
-            c = c ^ self.gtransformation(self.modadd(d, k[7*i+1]), 21)
-            a = self.reverse(self.modsub(self.reverse(a), self.reverse(self.gtransformation(self.modadd(b, k[7*i+2]), 13))))
-            e = (self.gtransformation(self.modadd(b, c, k[7*i+3]), 21)) ^ self.reverse(i+1)
+            b = b ^ self.gtransformation(self.modadd(a, self.k[7*i+0]), 5)
+            c = c ^ self.gtransformation(self.modadd(d, self.k[7*i+1]), 21)
+            a = self.reverse(self.modsub(self.reverse(a), self.reverse(self.gtransformation(self.modadd(b, self.k[7*i+2]), 13))))
+            e = (self.gtransformation(self.modadd(b, c, self.k[7*i+3]), 21)) ^ self.reverse(i+1)
             b = self.modadd(b, e)
             c = self.reverse(self.modsub(self.reverse(c), self.reverse(e)))
-            d = self.modadd(d, self.gtransformation(self.modadd(c, k[7*i+4]), 13))
-            b = b ^ self.gtransformation(self.modadd(a, k[7*i+5]), 21)
-            c = c ^ self.gtransformation(self.modadd(d, k[7*i+6]), 5)
+            d = self.modadd(d, self.gtransformation(self.modadd(c, self.k[7*i+4]), 13))
+            b = b ^ self.gtransformation(self.modadd(a, self.k[7*i+5]), 21)
+            c = c ^ self.gtransformation(self.modadd(d, self.k[7*i+6]), 5)
             a, b = b, a
             c, d = d, c
             b, c = c, b
@@ -87,20 +89,20 @@ class belt:
         return b + d + a + c
 
     #Decrypt input m represented as list of bytes using key represented as list of bytes
-    def decryption(self, m, key):
-        key = [self.list2int(key[i:i+4]) for i in range(0, len(key), 4)]
+    def decryption(self, m):
+        #key = [self.list2int(key[i:i+4]) for i in range(0, len(key), 4)]
         a, b, c, d = [self.list2int(m[i:i+4]) for i in range(0, len(m), 4)]
-        k = [key[i%8] for i in range(56)]
+        #k = [key[i%8] for i in range(56)]
         for i in reversed(range(8)):
-            b = b ^ self.gtransformation(self.modadd(a, k[7*i+6]), 5)
-            c = c ^ self.gtransformation(self.modadd(d, k[7*i+5]), 21)
-            a = self.reverse(self.modsub(self.reverse(a), self.reverse(self.gtransformation(self.modadd(b, k[7*i+4]), 13))))
-            e = (self.gtransformation(self.modadd(b, c, k[7*i+3]), 21)) ^ self.reverse(i+1)
+            b = b ^ self.gtransformation(self.modadd(a, self.k[7*i+6]), 5)
+            c = c ^ self.gtransformation(self.modadd(d, self.k[7*i+5]), 21)
+            a = self.reverse(self.modsub(self.reverse(a), self.reverse(self.gtransformation(self.modadd(b, self.k[7*i+4]), 13))))
+            e = (self.gtransformation(self.modadd(b, c, self.k[7*i+3]), 21)) ^ self.reverse(i+1)
             b = self.modadd(b, e)
             c = self.reverse(self.modsub(self.reverse(c), self.reverse(e)))
-            d = self.modadd(d, self.gtransformation(self.modadd(c, k[7*i+2]), 13))
-            b = b ^ self.gtransformation(self.modadd(a, k[7*i+1]), 21)
-            c = c ^ self.gtransformation(self.modadd(d, k[7*i+0]), 5)
+            d = self.modadd(d, self.gtransformation(self.modadd(c, self.k[7*i+2]), 13))
+            b = b ^ self.gtransformation(self.modadd(a, self.k[7*i+1]), 21)
+            c = c ^ self.gtransformation(self.modadd(d, self.k[7*i+0]), 5)
             a, b = b, a
             c, d = d, c
             a, d = d, a
@@ -112,15 +114,16 @@ class belt:
 
 
 if __name__ == '__main__':
-    belt1 = belt()
-    m = list(binascii.unhexlify('B194BAC80A08F53B366D008E584A5DE4'))
     key = list(binascii.unhexlify('E9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF6'))
+    belt1 = belt(key)
+    m = list(binascii.unhexlify('B194BAC80A08F53B366D008E584A5DE4'))
     c = list(binascii.unhexlify('E12BDC1AE28257EC703FCCF095EE8DF1'))
     key2 = list(binascii.unhexlify('92BD9B1CE5D141015445FBC95E4D0EF2682080AA227D642F2687F93490405511'))
+    belt2 = belt(key2)
     print('STB 34.101.31-2011')
     print(datetime.datetime.now())
-    c1 = binascii.hexlify(bytearray(belt1.encryption(m, key)))
-    d1 = binascii.hexlify(bytearray(belt1.decryption(c, key2)))
+    c1 = binascii.hexlify(bytearray(belt1.encryption(m)))
+    d1 = binascii.hexlify(bytearray(belt2.decryption(c)))
     print(datetime.datetime.now())
     if c1 == b'69cca1c93557c9e3d66bc3e0fa88fa6e':
         print('Encryption works correctly!')
