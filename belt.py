@@ -66,9 +66,7 @@ class belt:
 
     #Encrypt input m represented as list of bytes using key represented as list of bytes
     def encryption(self, m):
-        #key = [self.list2int(key[i:i+4]) for i in range(0, len(key), 4)]
         a, b, c, d = [self.list2int(m[i:i+4]) for i in range(0, len(m), 4)]
-        #k = [key[i%8] for i in range(56)]
         for i in range(8):
             b = b ^ self.gtransformation(self.modadd(a, self.k[7*i+0]), 5)
             c = c ^ self.gtransformation(self.modadd(d, self.k[7*i+1]), 21)
@@ -90,9 +88,7 @@ class belt:
 
     #Decrypt input m represented as list of bytes using key represented as list of bytes
     def decryption(self, m):
-        #key = [self.list2int(key[i:i+4]) for i in range(0, len(key), 4)]
         a, b, c, d = [self.list2int(m[i:i+4]) for i in range(0, len(m), 4)]
-        #k = [key[i%8] for i in range(56)]
         for i in reversed(range(8)):
             b = b ^ self.gtransformation(self.modadd(a, self.k[7*i+6]), 5)
             c = c ^ self.gtransformation(self.modadd(d, self.k[7*i+5]), 21)
