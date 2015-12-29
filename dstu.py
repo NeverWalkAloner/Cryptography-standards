@@ -1,6 +1,6 @@
 import binascii
 import datetime
-
+import pickle
 #DSTU 7624:2014 with 128-bit block and 128-bit key
 class dstu2014:
     def __init__(self, key):
@@ -134,6 +134,9 @@ class dstu2014:
                         243, 131, 40, 50, 69, 30, 164, 211, 162, 70, 110, 156, 221, 99, 212, 157]]
         self.v = [0x01, 0x01, 0x05, 0x01, 0x08, 0x06, 0x07, 0x04]
         self.v_inv = [0xAD, 0x95, 0x76, 0xA8, 0x2F, 0x49, 0xD7, 0xCA]
+        f = open('dstu_tables', 'rb')
+        self.multtable = pickle.load(f)
+        f.close()
         self.roundkeys = []
         self.keyexpansion(key)
 
@@ -154,6 +157,7 @@ class dstu2014:
         return x[0:4]+x[12:]+x[8:12]+x[4:8]
 
     #Multiplication in field x^8 + x^4 + x^3 + x^2 + 1
+    #Used for precomputation only
     def mult_field(self, x, y):
         p = 0
         while x:
@@ -177,7 +181,8 @@ class dstu2014:
     def scalar_mult(self, x, y):
         res = 0
         for i in range(len(x)):
-            res ^= self.mult_field(x[i], y[i])
+
+            res ^= self.multtable[x[i]][y[i]]
         return res
 
     #Circular right shift of vector x
@@ -327,5 +332,3 @@ if binascii.hexlify(bytearray(dstu.encryption(pt))) == b'81bf1c7d779bac20e1c9ea3
 if binascii.hexlify(bytearray(dstu2.decryption(ct))) == b'7291ef2b470cc7846f09c2303973dad7':
     print('Decryption works correctly!')
 print(datetime.datetime.now())
-
-
