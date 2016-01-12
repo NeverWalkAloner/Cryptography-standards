@@ -1,7 +1,22 @@
+#GOST 34.12-2015 with 128-bit block and 256-bit key
+#Copyright (C) 2015  NeverWalkAloner
+
+#This program is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import datetime
 import binascii
 import pickle
-#GOST 34.12-2015 with 128-bit block and 256-bit key
 class gost2015:
     def __init__(self, key):
         self.pi = (252, 238, 221, 17, 207, 110, 49, 22, 251, 196, 250, 218, 35, 197, 4, 77, 233, 119, 240, 219, 147, 46,
