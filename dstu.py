@@ -1,7 +1,23 @@
+#DSTU 7624:2014 with 128-bit block and 128-bit key
+#Copyright (C) 2015  NeverWalkAloner
+
+#This program is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import binascii
 import datetime
 import pickle
-#DSTU 7624:2014 with 128-bit block and 128-bit key
 class dstu2014:
     def __init__(self, key):
         self.pi = [[168, 67, 95, 6, 107, 117, 108, 89, 113, 223, 135, 149, 23, 240, 216, 9,
