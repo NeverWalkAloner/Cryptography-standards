@@ -1,22 +1,20 @@
-#STB 34.101.31-2011 with 128-bit block and 256-bit key
-#Copyright (C) 2015  NeverWalkAloner
+# STB 34.101.31-2011 with 128-bit block and 256-bit key
+# Copyright (C) 2015  NeverWalkAloner
 
-#This program is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 3 of the License, or
-#(at your option) any later version.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-#This program is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 
-#You should have received a copy of the GNU General Public License
-#along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import binascii
-import datetime
 class belt:
     def __init__(self, key):
         self.H = [0xB1, 0x94, 0xBA, 0xC8, 0x0A, 0x08, 0xF5, 0x3B, 0x36, 0x6D, 0x00, 0x8E, 0x58, 0x4A, 0x5D, 0xE4,
@@ -36,28 +34,28 @@ class belt:
                   0xA2, 0xD7, 0x46, 0x52, 0x42, 0xA8, 0xDF, 0xB3, 0x69, 0x74, 0xC5, 0x51, 0xEB, 0x23, 0x29, 0x21,
                   0xD4, 0xEF, 0xD9, 0xB4, 0x3A, 0x62, 0x28, 0x75, 0x91, 0x14, 0x10, 0xEA, 0x77, 0x6C, 0xDA, 0x1D]
         key = [self.list2int(key[i:i+4]) for i in range(0, len(key), 4)]
-        self.k = [key[i%8] for i in range(56)]
+        self.k = [key[i % 8] for i in range(56)]
 
-    #RotHi operation
+    # RotHi operation
     def circularleftshift(self, value, k):
         bitlength = 32
-        return (value << (k%bitlength) & 2**bitlength -1) ^ (value >> (bitlength - k)%bitlength)
+        return (value << (k % bitlength) & 2 ** bitlength - 1) ^ (value >> (bitlength - k) % bitlength)
 
-    #Represent 32-bit number as list of bytes
+    # Represent 32-bit number as list of bytes
     def int2list(self, x):
         return [x >> i & 0xff for i in [24, 16, 8, 0]]
 
-    #Represent list of bytes as 32-bit number
+    # Represent list of bytes as 32-bit number
     def list2int(self, x):
         l = [24, 16, 8, 0]
         return sum([x[i] << l[i] for i in range(4)])
 
-    #Modular Substraction
+    # Modular Substraction
     def modsub(self, x, y):
         mod = 2**32
         return (x - y) % mod
 
-    #Modular addition
+    # Modular addition
     def modadd(self, *x):
         mod = 2**32
         res = 0
@@ -65,28 +63,29 @@ class belt:
             res = (res + self.reverse(el)) % mod
         return self.reverse(res)
 
-    #H-transformation: replacing byte with another value from table
+    # H-transformation: replacing byte with another value from table
     def htransformation(self, x):
         return self.H[x]
 
-    #G-transformation
+    # G-transformation
     def gtransformation(self, x, k):
         res = self.list2int([self.htransformation(i) for i in self.int2list(x)])
         return self.reverse(self.circularleftshift(self.reverse(res), k))
 
-    #Reverse bytes in word x
+    # Reverse bytes in word x
     def reverse(self, x):
         l = self.int2list(x)
         l.reverse()
         return self.list2int(l)
 
-    #Encrypt input m represented as list of bytes using key represented as list of bytes
+    # Encrypt input m represented as list of bytes using key represented as list of bytes
     def encryption(self, m):
         a, b, c, d = [self.list2int(m[i:i+4]) for i in range(0, len(m), 4)]
         for i in range(8):
             b = b ^ self.gtransformation(self.modadd(a, self.k[7*i+0]), 5)
             c = c ^ self.gtransformation(self.modadd(d, self.k[7*i+1]), 21)
-            a = self.reverse(self.modsub(self.reverse(a), self.reverse(self.gtransformation(self.modadd(b, self.k[7*i+2]), 13))))
+            a = self.reverse(self.modsub(self.reverse(a),
+                                         self.reverse(self.gtransformation(self.modadd(b, self.k[7*i+2]), 13))))
             e = (self.gtransformation(self.modadd(b, c, self.k[7*i+3]), 21)) ^ self.reverse(i+1)
             b = self.modadd(b, e)
             c = self.reverse(self.modsub(self.reverse(c), self.reverse(e)))
@@ -102,13 +101,14 @@ class belt:
         d = self.int2list(d)
         return b + d + a + c
 
-    #Decrypt input m represented as list of bytes using key represented as list of bytes
+    # Decrypt input m represented as list of bytes using key represented as list of bytes
     def decryption(self, m):
         a, b, c, d = [self.list2int(m[i:i+4]) for i in range(0, len(m), 4)]
         for i in reversed(range(8)):
             b = b ^ self.gtransformation(self.modadd(a, self.k[7*i+6]), 5)
             c = c ^ self.gtransformation(self.modadd(d, self.k[7*i+5]), 21)
-            a = self.reverse(self.modsub(self.reverse(a), self.reverse(self.gtransformation(self.modadd(b, self.k[7*i+4]), 13))))
+            a = self.reverse(self.modsub(self.reverse(a),
+                                         self.reverse(self.gtransformation(self.modadd(b, self.k[7*i+4]), 13))))
             e = (self.gtransformation(self.modadd(b, c, self.k[7*i+3]), 21)) ^ self.reverse(i+1)
             b = self.modadd(b, e)
             c = self.reverse(self.modsub(self.reverse(c), self.reverse(e)))
@@ -123,22 +123,3 @@ class belt:
         c = self.int2list(c)
         d = self.int2list(d)
         return c + a + d + b
-
-
-if __name__ == '__main__':
-    key = list(binascii.unhexlify('E9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF6'))
-    belt1 = belt(key)
-    m = list(binascii.unhexlify('B194BAC80A08F53B366D008E584A5DE4'))
-    c = list(binascii.unhexlify('E12BDC1AE28257EC703FCCF095EE8DF1'))
-    key2 = list(binascii.unhexlify('92BD9B1CE5D141015445FBC95E4D0EF2682080AA227D642F2687F93490405511'))
-    belt2 = belt(key2)
-    print('STB 34.101.31-2011')
-    print(datetime.datetime.now())
-    c1 = binascii.hexlify(bytearray(belt1.encryption(m)))
-    d1 = binascii.hexlify(bytearray(belt2.decryption(c)))
-    print(datetime.datetime.now())
-    if c1 == b'69cca1c93557c9e3d66bc3e0fa88fa6e':
-        print('Encryption works correctly!')
-    if d1 == b'0dc5300600cab840b38448e5e993f421':
-        print('Decryption works correctly!')
-

@@ -1,23 +1,22 @@
-#DSTU 7624:2014 with 128-bit block and 128-bit key
-#Copyright (C) 2015  NeverWalkAloner
+# DSTU 7624:2014 with 128-bit block and 128-bit key
+# Copyright (C) 2015  NeverWalkAloner
 
-#This program is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 3 of the License, or
-#(at your option) any later version.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-#This program is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 
-#You should have received a copy of the GNU General Public License
-#along with this program.  If not, see  <http://www.gnu.org/licenses/>.
-
-
-import binascii
-import datetime
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see  <http://www.gnu.org/licenses/>.
 import pickle
+from os.path import dirname
+
+
 class dstu2014:
     def __init__(self, key):
         self.pi = [[168, 67, 95, 6, 107, 117, 108, 89, 113, 223, 135, 149, 23, 240, 216, 9,
@@ -37,7 +36,7 @@ class dstu2014:
                     172, 82, 100, 16, 208, 217, 19, 12, 18, 41, 81, 185, 207, 214, 115, 141,
                     129, 84, 192, 237, 78, 68, 167, 42, 133, 37, 230, 202, 124, 139, 86, 128],
                     [206, 187, 235, 146, 234, 203, 19, 193, 233, 58, 214, 178, 210, 144, 23, 248,
-                    66, 21, 86, 180, 101, 28, 136, 67, 197, 92, 54, 186, 245, 87, 103, 141,
+                     66, 21, 86, 180, 101, 28, 136, 67, 197, 92, 54, 186, 245, 87, 103, 141,
                     49, 246, 100, 88, 158, 244, 34, 170, 117, 15, 2, 177, 223, 109, 115, 77,
                     124, 38, 46, 247, 8, 93, 68, 62, 159, 20, 200, 174, 84, 16, 216, 188,
                     26, 107, 105, 243, 189, 51, 171, 250, 209, 155, 104, 78, 22, 149, 145, 238,
@@ -150,30 +149,30 @@ class dstu2014:
                         243, 131, 40, 50, 69, 30, 164, 211, 162, 70, 110, 156, 221, 99, 212, 157]]
         self.v = [0x01, 0x01, 0x05, 0x01, 0x08, 0x06, 0x07, 0x04]
         self.v_inv = [0xAD, 0x95, 0x76, 0xA8, 0x2F, 0x49, 0xD7, 0xCA]
-        f = open('dstu_tables', 'rb')
+        f = open(dirname(__file__) + '/dstu_tables', 'rb')
         self.multtable = pickle.load(f)
         f.close()
         self.roundkeys = []
         self.keyexpansion(key)
 
-    #XOR x and y byte array
+    # XOR x and y byte array
     def xor(self, x, y):
         return [x[i] ^ y[i] for i in range(len(x))]
 
-    #Pi transformation
+    # Pi transformation
     def sbox(self, x):
         return [self.pi[i%4][x[i]] for i in range(len(x))]
 
-    #Pi inverse transformation
+    # Pi inverse transformation
     def sbox_inv(self, x):
         return [self.piinvr[i%4][x[i]] for i in range(len(x))]
 
-    #Circular left shift 4th, 5th, 6th and 7th row of x matrix
+    # Circular left shift 4th, 5th, 6th and 7th row of x matrix
     def srow(self, x):
         return x[0:4]+x[12:]+x[8:12]+x[4:8]
 
-    #Multiplication in field x^8 + x^4 + x^3 + x^2 + 1
-    #Used for precomputation only
+    # Multiplication in field x^8 + x^4 + x^3 + x^2 + 1
+    # Used for precomputation only
     def mult_field(self, x, y):
         p = 0
         while x:
@@ -186,14 +185,14 @@ class dstu2014:
             x >>= 1
         return p
 
-    #Addition in field x^8 + x^4 + x^3 + x^2 + 1
+    # Addition in field x^8 + x^4 + x^3 + x^2 + 1
     def sum_field(self, x):
         res = 0
         for el in x:
             res ^= el
         return res
 
-    #Scalar multiplication of vectors x, y
+    # Scalar multiplication of vectors x, y
     def scalar_mult(self, x, y):
         res = 0
         for i in range(len(x)):
@@ -201,19 +200,19 @@ class dstu2014:
             res ^= self.multtable[x[i]][y[i]]
         return res
 
-    #Circular right shift of vector x
+    # Circular right shift of vector x
     def rightshiftvector(self, x, i):
         l = len(x)
         i = i % l
         return x[l-i:] + x[:l-i]
 
-    #Circular left shift of vector x
+    # Circular left shift of vector x
     def leftshiftvector(self, x, i):
         l = len(x)
         i = i % l
         return x[i:] + x[:i]
 
-    #Mix column operation
+    # Mix column operation
     def mcol(self, x):
         res = []
         for i in range(2):
@@ -221,7 +220,7 @@ class dstu2014:
                 res.append(self.scalar_mult(x[i*8:i*8+8], self.rightshiftvector(self.v, j)))
         return res
 
-    #Inverse mix column operation
+    # Inverse mix column operation
     def mcol_inv(self, x):
         res = []
         for i in range(2):
@@ -229,7 +228,7 @@ class dstu2014:
                 res.append(self.scalar_mult(x[i*8:i*8+8], self.rightshiftvector(self.v_inv, j)))
         return res
 
-    #Represent 64-bit number as list of bytes
+    # Represent 64-bit number as list of bytes
     def int2list(self, x):
         return [x >> i & 0xff for i in [56, 48, 40, 32, 24, 16, 8, 0]]
 
@@ -238,29 +237,29 @@ class dstu2014:
         l = [56, 48, 40, 32, 24, 16, 8, 0]
         return sum([x[i] << l[i] for i in range(8)])
 
-    #Add x and y modulo 2^64
+    # Add x and y modulo 2^64
     def modadd(self, x, y):
         return x + y % 2**64
 
-    #Represent key and internal state as pair of 64-bit numbers and return its sum modular 2^64
+    # Represent key and internal state as pair of 64-bit numbers and return its sum modular 2^64
     def key_add(self, k, state):
         k0, k1 = self.list2int(list(reversed(k[:8]))), self.list2int(list(reversed(k[8:])))
         state0, state1 = self.list2int(list(reversed(state[:8]))), self.list2int(list(reversed(state[8:])))
         res0, res1 = self.modadd(k0, state0), self.modadd(k1, state1)
         return list(reversed(self.int2list(res0))) + list(reversed(self.int2list(res1)))
 
-    #Substraction modular 2^64
+    # Substraction modular 2^64
     def modsub(self, x, y):
         return x - y % 2**64
 
-    #Represent key and internal state as pair of 64-bit numbers and return its substraction modular 2^64
+    # Represent key and internal state as pair of 64-bit numbers and return its substraction modular 2^64
     def key_sub(self, state, k):
         k0, k1 = self.list2int(list(reversed(k[:8]))), self.list2int(list(reversed(k[8:])))
         state0, state1 = self.list2int(list(reversed(state[:8]))), self.list2int(list(reversed(state[8:])))
         res0, res1 = self.modsub(state0, k0), self.modsub(state1, k1)
         return list(reversed(self.int2list(res0))) + list(reversed(self.int2list(res1)))
 
-    #128-bit key expansion for 128-bit block encryption/decryption
+    # 128-bit key expansion for 128-bit block encryption/decryption
     def keyexpansion(self, key):
         k0, k1 = key[:], key[:]
         state = [0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
@@ -279,7 +278,7 @@ class dstu2014:
         self.even_round_keys(key, intermediatekey)
         return self.roundkeys
 
-    #generate round keys
+    # generate round keys
     def even_round_keys(self, key, intermediatekey):
         tmv = [0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00]
         id = key[:]
@@ -299,7 +298,7 @@ class dstu2014:
             if i < 10:
                 self.roundkeys.append(self.leftshiftvector(state, 7))
 
-    #Encryption of message m
+    # Encryption of message m
     def encryption(self, m):
         state = self.key_add(self.roundkeys[0], m)
         for i in range(1, 10):
@@ -313,7 +312,7 @@ class dstu2014:
         state = self.key_add(self.roundkeys[10], state)
         return state
 
-    #Decryption of ciphertext c
+    # Decryption of ciphertext c
     def decryption(self, c):
         state = self.key_sub(c, self.roundkeys[10])
         state = self.mcol_inv(state)
@@ -326,25 +325,3 @@ class dstu2014:
             state = self.sbox_inv(state)
         state = self.key_sub(state, self.roundkeys[0])
         return state
-
-
-
-
-
-
-if __name__ == '__main__':
-    key = list(binascii.unhexlify('000102030405060708090a0b0c0d0e0f'))
-    pt = list(binascii.unhexlify('101112131415161718191a1b1c1d1e1f'))
-    dstu =dstu2014(key)
-
-    key2 = list(binascii.unhexlify('0f0e0d0c0b0a09080706050403020100'))
-    ct = list(binascii.unhexlify('1f1e1d1c1b1a19181716151413121110'))
-    dstu2 = dstu2014(key2)
-
-    print('DSTU 7624:2014')
-    print(datetime.datetime.now())
-    if binascii.hexlify(bytearray(dstu.encryption(pt))) == b'81bf1c7d779bac20e1c9ea39b4d2ad06':
-        print('Encryption works correctly!')
-    if binascii.hexlify(bytearray(dstu2.decryption(ct))) == b'7291ef2b470cc7846f09c2303973dad7':
-        print('Decryption works correctly!')
-    print(datetime.datetime.now())
