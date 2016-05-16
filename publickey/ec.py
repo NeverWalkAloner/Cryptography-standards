@@ -84,7 +84,7 @@ class ECPoint:
             temp = temp + temp
         return p_result
 
-    # Multiplication in field x^8 + x^4 + x^3 + x^2 + 1
+    # Multiplication in polynomial basis
     # Used for precomputation only
     def mult_field(self, x, y, n):
         mask = 1 << (n.bit_length() - 2)
@@ -99,7 +99,7 @@ class ECPoint:
             x >>= 1
         return p
 
-    # Addition in field x^8 + x^4 + x^3 + x^2 + 1
+    # Addition in polynomial basis
     def sum_field(self, *x):
         res = 0
         for el in x:
