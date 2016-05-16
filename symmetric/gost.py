@@ -1,23 +1,22 @@
-#GOST 34.12-2015 with 128-bit block and 256-bit key
-#Copyright (C) 2015  NeverWalkAloner
+# GOST 34.12-2015 with 128-bit block and 256-bit key
+# Copyright (C) 2015  NeverWalkAloner
 
-#This program is free software: you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation, either version 3 of the License, or
-#(at your option) any later version.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-#This program is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 
-#You should have received a copy of the GNU General Public License
-#along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-import datetime
-import binascii
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import pickle
+from os.path import dirname
+
+
 class gost2015:
     def __init__(self, key):
         self.pi = (252, 238, 221, 17, 207, 110, 49, 22, 251, 196, 250, 218, 35, 197, 4, 77, 233, 119, 240, 219, 147, 46,
@@ -45,11 +44,11 @@ class gost2015:
                       189, 138, 136, 221, 205, 11, 19, 152, 2, 147, 128, 144, 208, 36, 52, 203, 237, 244, 206, 153, 16,
                       68, 64, 146, 58, 1, 38, 18, 26, 72, 104, 245, 129, 139, 199, 214, 32, 10, 8, 0, 76, 215, 116)
 
-        #Precomputed table with multiplication results in field x^8 + x^7 + x^6 + x + 1
-        f = open('gost_tables', 'rb')
+        # Precomputed table with multiplication results in field x^8 + x^7 + x^6 + x + 1
+        f = open(dirname(__file__) + '/gost_tables', 'rb')
         self.multtable = pickle.load(f)
         f.close()
-        #Constants C using for key schedule
+        # Constants C using for key schedule
         self.C = [[110, 162, 118, 114, 108, 72, 122, 184, 93, 39, 189, 16, 221, 132, 148, 1],
                   [220, 135, 236, 228, 216, 144, 244, 179, 186, 78, 185, 32, 121, 203, 235, 2],
                   [178, 37, 154, 150, 180, 216, 142, 11, 231, 105, 4, 48, 164, 79, 127, 3],
@@ -85,23 +84,23 @@ class gost2015:
         self.roundkey = [key[:16], key[16:]]
         self.roundkey = self.roundkey + self.keyschedule(self.roundkey)
 
-    #Addition in field x^8 + x^7 + x^6 + x + 1  0x1C3
+    # Addition in field x^8 + x^7 + x^6 + x + 1  0x1C3
     def add_field(self, x, y):
         return x ^ y
 
-    #sum of all x elements
+    # sum of all x elements
     def sum_field(self, x):
         s = 0
         for a in x:
             s ^= a
         return s
 
-    #multiplication in field x^8 + x^7 + x^6 + x + 1
-    #not cryptography sercure using only for precomputing
+    # multiplication in field x^8 + x^7 + x^6 + x + 1
+    # not cryptography sercure using only for precomputing
     def mult_field(self, x, y):
         p = 0
         while x:
-            if (x & 1):
+            if x & 1:
                 p ^= y
             if y & 0x80:
                 y = (y << 1) ^ 0x1C3
@@ -110,7 +109,7 @@ class gost2015:
             x >>= 1
         return p
 
-    #XOR binary strings x and k
+    # XOR binary strings x and k
     def xtransformation(self, x, k):
         return [x[i] ^ k[i] for i in range(len(k))]
 
@@ -123,42 +122,41 @@ class gost2015:
         #return self.pi.index(x)
         return self.piinv[x]
 
-    #Replace each byte in x with corresponded byte from table pi
+    # Replace each byte in x with corresponded byte from table pi
     def stransformation(self, x):
         return [self.pitransformation(x[i]) for i in range(len(x))]
 
-    #inverse S transfromation
+    # inverse S transfromation
     def sinvtransformation(self, x):
         return [self.piinvtransformation(i) for i in x]
 
-    #Convert list of bytes to single byte using finite field arithmetic
+    # Convert list of bytes to single byte using finite field arithmetic
     def l(self, x):
         consts = [148, 32, 133, 16, 194, 192, 1, 251, 1, 192, 194, 16, 133, 32, 148, 1]
         multiplication = [self.multtable[x[i]][consts[i]] for i in range(len(x))]
         return self.sum_field(multiplication)
 
-    #R transfromation append list of bytes with result of l-transformation
+    # R transfromation append list of bytes with result of l-transformation
     def rtransformation(self, x):
-        return [self.l(x),]+x[:-1]
+        return [self.l(x), ]+x[:-1]
 
-
-    #Inverse R transformation
+    # Inverse R transformation
     def rinvtransformation(self, x):
-        return x[1:] + [self.l(x[1:] + [x[0],]),]
+        return x[1:] + [self.l(x[1:] + [x[0], ]),]
 
-    #L transfromation from standard
+    # L transfromation from standard
     def ltransformation(self, x):
         for i in range(len(x)):
             x = self.rtransformation(x)
         return x
 
-    #Inverse L transformation
+    # Inverse L transformation
     def linvtransformation(self, x):
         for i in range(len(x)):
             x = self.rinvtransformation(x)
         return x
 
-    #F transformation using for key schedule
+    # F transformation using for key schedule
     def ftransformation(self, k, a):
         tmp = self.xtransformation(k, a[0])
         tmp = self.stransformation(tmp)
@@ -166,7 +164,7 @@ class gost2015:
         tmp = self.xtransformation(tmp, a[1])
         return [tmp, a[0]]
 
-    #Generate round keys
+    # Generate round keys
     def keyschedule(self, roundkey):
         roundkeys = []
         for i in range(4):
@@ -176,7 +174,7 @@ class gost2015:
             roundkeys.append(roundkey[1])
         return roundkeys
 
-    #Encryption of message m with key
+    # Encryption of message m with key
     def encryption(self, m):
         for i in range(9):
             m = self.xtransformation(m, self.roundkey[i])
@@ -185,7 +183,7 @@ class gost2015:
         m = self.xtransformation(m, self.roundkey[9])
         return m
 
-    #Decryption of ciphertext c with key
+    # Decryption of ciphertext c with key
     def decryption(self, c):
         for i in range(9, 0, -1):
             c = self.xtransformation(c, self.roundkey[i])
@@ -193,20 +191,3 @@ class gost2015:
             c = self.sinvtransformation(c)
         c = self.xtransformation(c, self.roundkey[0])
         return c
-
-if __name__ == '__main__':
-    mtest = list(binascii.unhexlify('1122334455667700ffeeddccbbaa9988'))
-    ktest = list(binascii.unhexlify('8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef'))
-    gost =gost2015(ktest)
-    print('GOST 34.12-2015')
-    print(datetime.datetime.now())
-    c = gost.encryption(mtest)
-    d = gost.decryption(c)
-    print(datetime.datetime.now())
-    if binascii.hexlify(bytearray(c)) == b'7f679d90bebc24305a468d42b9d4edcd':
-        print('Ecryption works correctly!')
-    if binascii.hexlify(bytearray(d)) == b'1122334455667700ffeeddccbbaa9988':
-        print('Decryption works correctly!')
-
-
-
