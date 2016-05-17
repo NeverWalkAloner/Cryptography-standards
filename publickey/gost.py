@@ -47,7 +47,7 @@ class DSGOST:
         r = 0
         while r == 0:
             c_point = k * self.p_point
-            r = c_point.x
+            r = c_point.x % self.q
         s = (r * private_key + k * e) % self.q
         return r, s
 
@@ -63,7 +63,7 @@ class DSGOST:
         z1 = (sign[1] * nu) % self.q
         z2 = (-sign[0] * nu) % self.q
         c_point = z1 * self.p_point + z2 * public_key
-        r = c_point.x
+        r = c_point.x % self.q
         if r == sign[0]:
             return True
         return False
