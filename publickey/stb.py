@@ -55,12 +55,16 @@ class STB:
     # message, sign - int
     # pub_key - tuple
     def verify(self, message, pub_key, sign):
+        if sign[1] > self.q:
+            return False
         public_key = ECPoint(pub_key[0], pub_key[1], self.a, self.b, self.p)
         sign_tmp = reverse(sign[0]), reverse(sign[1])
         oid = 0x06092A7000020022651F51
         hash_value = self.belt_hash(message)
         r_point = ((sign_tmp[1] + reverse(hash_value)) % self.q) * self.g_point + \
                   (sign_tmp[0] + 2 ** self.l) * public_key
+        if r_point == float('inf'):
+            return False
         value_to_hash = int2list(oid) + int2list(reverse(r_point.x)) + int2list(hash_value)
         t = self.belt_hash(list2int(value_to_hash))
         t = int2list(t)[:16]
