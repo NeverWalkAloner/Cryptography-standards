@@ -39,7 +39,7 @@ class DSGOST:
     # message - int
     # private_key - int
     def sign(self, message, private_key, k=0):
-        e = message % self.p
+        e = message % self.q
         if e == 0:
             e = 1
         if k == 0:
@@ -56,7 +56,7 @@ class DSGOST:
     # sign - tuple
     # public_key - ECPoint
     def verify(self, message, sign, public_key):
-        e = message % self.p
+        e = message % self.q
         if e == 0:
             e = 1
         nu = ECPoint._mod_inverse(e, self.q)
