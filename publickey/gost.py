@@ -44,11 +44,11 @@ class DSGOST:
             e = 1
         if k == 0:
             k = random.randint(1, self.q - 1)
-        r = 0
-        while r == 0:
+        r, s = 0, 0
+        while r == 0 or s == 0:
             c_point = k * self.p_point
             r = c_point.x % self.q
-        s = (r * private_key + k * e) % self.q
+            s = (r * private_key + k * e) % self.q
         return r, s
 
     # verify singed message
