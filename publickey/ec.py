@@ -85,7 +85,6 @@ class ECPoint:
         return p_result
 
     # Multiplication in polynomial basis
-    # Used for precomputation only
     def mult_field(self, x, y, n):
         mask = 1 << (n.bit_length() - 2)
         p = 0
