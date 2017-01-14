@@ -118,4 +118,3 @@ class ECPoint:
             u = self.sum_field(u, (v << j))
             g1 = self.sum_field(g1, (g2 << j))
         return g1
-
