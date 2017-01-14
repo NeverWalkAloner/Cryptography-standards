@@ -1,0 +1,4 @@
+[![Build status](https://travis-ci.org/icoz/Cryptography-standards.svg?branch=master)](https://travis-ci.org/icoz/Cryptography-standards)
+
+Required python3.3+
+
