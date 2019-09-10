@@ -35,7 +35,7 @@ class DSGOST:
         q_point = d * self.p_point
         return d, q_point
 
-    # sing message
+    # sign message
     # message - int
     # private_key - int
     def sign(self, message, private_key, k=0):
@@ -51,7 +51,7 @@ class DSGOST:
             s = (r * private_key + k * e) % self.q
         return r, s
 
-    # verify singed message
+    # verify signed message
     # message - int
     # sign - tuple
     # public_key - ECPoint
